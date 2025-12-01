@@ -1,30 +1,39 @@
+# CLI
 import click
+# Colorization
+from colorama import init, Fore, Style
+# Multithreading
 import concurrent.futures
+# Core
 from scanner.core.config import ConfigManager
 from scanner.core.requester import Requester
 from scanner.core.crawler import Crawler
+# Utils
 from scanner.utils.banner import print_banner
 from scanner.utils.reporter import Reporter
+# Modules Reconnaissance
 from scanner.modules.recon.subdomain import SubdomainScanner
 from scanner.modules.recon.tech_stack import TechStackScanner
 from scanner.modules.recon.directory_brute import DirectoryBruteScanner
 from scanner.modules.recon.spider import SpiderScanner
 from scanner.modules.recon.dorking import DorkingScanner
 from scanner.modules.recon.waf import WAFScanner
+# Modules Configuration
 from scanner.modules.config.ssl_tls import SSLScanner
 from scanner.modules.config.cloud_storage import CloudStorageScanner
 from scanner.modules.config.subdomain_takeover import SubdomainTakeoverScanner
 from scanner.modules.config.headers import HeaderScanner
 from scanner.modules.config.cors import CORSScanner
+# Modules IAM
 from scanner.modules.iam.auth import AuthScanner
 from scanner.modules.iam.session import SessionScanner
 from scanner.modules.iam.authorization import AuthZScanner
+# Modules Injection
 from scanner.modules.injection.sqli import SQLInjectionScanner
 from scanner.modules.injection.xss import XSSScanner
 from scanner.modules.injection.ssrf import SSRFScanner
 from scanner.modules.injection.xxe import XXEScanner
 from scanner.modules.injection.command_injection import CommandInjectionScanner
-from colorama import init, Fore, Style
 
 init(autoreset=True)
 
@@ -70,8 +79,9 @@ def main(target_url, phase):
     urls = []
     if phase in ['iam', 'input']:
         print(f"{Fore.BLUE}[*] Crawling {target_url} to discover assets...{Style.RESET_ALL}")
-        crawler = Crawler(target_url, requester.session)
-        crawler.crawl(depth=2)
+        crawler = Crawler(target_url)
+        crawl_depth = config.get('crawler.depth', 2)
+        crawler.crawl(depth=crawl_depth)
         forms = crawler.forms
         urls = list(crawler.visited_urls)
         print(f"{Fore.BLUE}[*] Found {len(urls)} URLs and {len(forms)} forms.{Style.RESET_ALL}")
@@ -118,6 +128,13 @@ def main(target_url, phase):
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
         futures = [executor.submit(scanner.scan, forms=forms, urls=urls) for scanner in scanners]
         concurrent.futures.wait(futures)
+        
+        # Check for exceptions in threads
+        for future in futures:
+            try:
+                future.result()
+            except Exception as e:
+                print(f"{Fore.RED}[!] Exception in scanner thread: {e}{Style.RESET_ALL}")
         
     # Collect and print vulnerabilities
     all_vulns = []

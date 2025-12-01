@@ -17,7 +17,8 @@ class DirectoryBruteScanner(BaseScanner):
         
         try:
             with open(wordlist_path, 'r') as f:
-                paths = [line.strip() for line in f if line.strip()]
+                # Use dict.fromkeys to remove duplicates while preserving order
+                paths = list(dict.fromkeys(line.strip() for line in f if line.strip()))
                 
             for path in paths:
                 url = f"{self.target_url.rstrip('/')}/{path}"

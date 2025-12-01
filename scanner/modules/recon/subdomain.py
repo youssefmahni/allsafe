@@ -40,5 +40,32 @@ class SubdomainScanner(BaseScanner):
         except Exception as e:
             print(f"[!] Error querying crt.sh: {e}")
 
-        # Active Enumeration (Brute Force) - Placeholder for now as per plan
-        # We can implement this using the wordlist from config
+        # Active Enumeration (Brute Force)
+        wordlist_path = config.get('wordlists.subdomains')
+        if wordlist_path:
+            print(f"[*] Starting Active Enumeration using {wordlist_path}...")
+            try:
+                with open(wordlist_path, 'r') as f:
+                    # Use dict.fromkeys to remove duplicates while preserving order
+                    subs = list(dict.fromkeys(line.strip() for line in f if line.strip()))
+                
+                print(f"[*] Testing {len(subs)} potential subdomains...")
+                
+                for sub in subs:
+                    full_domain = f"{sub}.{domain}"
+                    url = f"http://{full_domain}"
+                    try:
+                        # Short timeout for brute force
+                        response = requests.get(url, timeout=3)
+                        if response.status_code in [200, 301, 302, 403]:
+                            print(f" - Found: {full_domain} (Status: {response.status_code})")
+                            self.add_vulnerability(
+                                "Subdomain Found (Active)",
+                                f"Found subdomain: {full_domain} (Status: {response.status_code})",
+                                "Info",
+                                url=url
+                            )
+                    except requests.RequestException:
+                        pass
+            except Exception as e:
+                print(f"[!] Error reading wordlist: {e}")

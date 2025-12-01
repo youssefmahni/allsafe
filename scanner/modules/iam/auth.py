@@ -5,29 +5,53 @@ import os
 
 class AuthScanner(BaseScanner):
     def scan(self, forms=None, urls=None):
-        print(f"[*] Starting Authentication Testing on {self.target_url}")
+        self.log(f"[*] Starting Authentication Testing on {self.target_url}")
         
         config = ConfigManager()
         users_path = config.get('wordlists.users')
         passwords_path = config.get('wordlists.passwords')
         
         # 1. Default Credentials Check (Simplified)
-        print("[*] Checking for default credentials...")
-        defaults = [('admin', 'admin'), ('admin', 'password'), ('user', 'user')]
-        
-        # In a real scenario, we would need to know the login URL and parameter names.
-        # For this rebuild, we'll iterate over discovered forms if available, or just log the attempt.
-        
+        self.log("[*] Checking for default credentials...")
+                
         target_forms = forms or []
         login_form = None
         for form in target_forms:
-            # Heuristic to find login form
-            if 'login' in form['action'].lower() or any(i.get('name') and 'user' in i['name'] for i in form['inputs']):
-                login_form = form
-                break
+            # Enhanced heuristic to find login form
+            inputs = form.get('inputs', [])
+            action = (form.get('action') or '').lower()
+            
+            # 1. Check for password field (Strong indicator)
+            # Check type='password' OR name contains 'pass', 'pwd'
+            has_password = any(
+                i.get('type') == 'password' or 
+                any(kw in (i.get('name') or '').lower() for kw in ['pass', 'pwd'])
+                for i in inputs
+            )
+            
+            # 2. Check for user/email field
+            has_user = any(
+                kw in (i.get('name') or '').lower() 
+                for i in inputs 
+                for kw in ['user', 'email', 'login', 'username', 'id', 'uname']
+            )
+            
+            # 3. Check for login keywords in action URL
+            is_login_url = any(kw in action for kw in ['login', 'signin', 'auth', 'session', 'user'])
+            
+            # 4. Negative check for registration forms
+            is_register = any(kw in action for kw in ['register', 'signup', 'create', 'join'])
+            
+            if not is_register:
+                if has_password and (has_user or is_login_url):
+                    login_form = form
+                    break
+                elif is_login_url and has_user:
+                    login_form = form
+                    break
         
         if login_form:
-            print(f"[*] Found potential login form at {login_form['action']}")
+            self.log(f"[*] Found potential login form at {login_form['action']}")
             # Here we would attempt to login with defaults
             # For demonstration, we just log that we found the form
             self.add_vulnerability(
@@ -37,21 +61,17 @@ class AuthScanner(BaseScanner):
                 url=login_form['action']
             )
         else:
-            print("[*] No obvious login form found in crawled data.")
+            self.log("[*] No obvious login form found in crawled data.")
 
         # 2. Brute Force
         if login_form and users_path and passwords_path and os.path.exists(users_path) and os.path.exists(passwords_path):
-            print(f"[*] Starting brute-force attack on {login_form['action']}...")
+            self.log(f"[*] Starting brute-force attack on {login_form['action']}...")
             
             try:
                 with open(users_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    users = [line.strip() for line in f if line.strip()]
+                    users = list(dict.fromkeys(line.strip() for line in f if line.strip()))
                 with open(passwords_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    passwords = [line.strip() for line in f if line.strip()]
-                
-                # Limit for demo/safety
-                users = users[:5]
-                passwords = passwords[:10]
+                    passwords = list(dict.fromkeys(line.strip() for line in f if line.strip()))
                 
                 for user in users:
                     for password in passwords:
@@ -76,7 +96,12 @@ class AuthScanner(BaseScanner):
                             # Success detection: Redirect or significant length change
                             # This is heuristic and might need tuning
                             if res.status_code in [301, 302]:
-                                print(f"{Fore.GREEN}[+] Potential Success: {user}:{password} (Redirect to {res.headers.get('Location')}){Style.RESET_ALL}")
+                                location = res.headers.get('Location', '').lower()
+                                # False positive check: Redirecting back to login is usually a failure
+                                if 'login' in location or 'error' in location or 'fail' in location:
+                                    continue
+                                    
+                                self.log(f"{Fore.GREEN}[+] Potential Success: {user}:{password} (Redirect to {location}){Style.RESET_ALL}")
                                 self.add_vulnerability(
                                     "Weak Credentials",
                                     f"Valid credentials found: {user}:{password}",
@@ -87,4 +112,4 @@ class AuthScanner(BaseScanner):
                         except Exception:
                             pass
             except Exception as e:
-                print(f"[!] Error during brute-force: {e}")
+                self.log(f"[!] Error during brute-force: {e}")

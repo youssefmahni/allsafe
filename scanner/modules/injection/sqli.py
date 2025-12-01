@@ -11,8 +11,13 @@ class SQLInjectionScanner(BaseScanner):
         
         payloads = ["'", "\"", "' OR 1=1 --", "\" OR 1=1 --"]
         if payloads_path:
-             # Load extra payloads if file exists (omitted for brevity)
-             pass
+             try:
+                 with open(payloads_path, 'r') as f:
+                     # Use dict.fromkeys to remove duplicates while preserving order
+                     extra_payloads = list(dict.fromkeys(line.strip() for line in f if line.strip()))
+                     payloads.extend(extra_payloads)
+             except Exception as e:
+                 print(f"[!] Error loading SQLi payloads: {e}")
              
         errors = ["syntax error", "mysql", "sql", "database error"]
         
@@ -37,7 +42,10 @@ class SQLInjectionScanner(BaseScanner):
             except:
                 pass
 
+            vulnerable = False
             for payload in payloads:
+                if vulnerable: break
+                
                 data = {}
                 for input_tag in inputs:
                     name = input_tag.get('name')
@@ -63,8 +71,11 @@ class SQLInjectionScanner(BaseScanner):
                                 url=action
                             )
                             print(f"[!] SQL Injection (Error-based) found at {action}")
+                            vulnerable = True
                             break
                     
+                    if vulnerable: break
+
                     # Time-based Blind
                     # Heuristic: if payload suggests sleep/delay and response takes > 5s
                     if "sleep" in payload.lower() or "waitfor" in payload.lower() or "benchmark" in payload.lower():
@@ -76,6 +87,8 @@ class SQLInjectionScanner(BaseScanner):
                                 url=action
                             )
                             print(f"[!] SQL Injection (Time-based) found at {action}")
+                            vulnerable = True
+                            break
 
                     # Boolean-based (Content Length)
                     # Heuristic: Significant change in response length for "True" payloads
@@ -88,6 +101,8 @@ class SQLInjectionScanner(BaseScanner):
                                 url=action
                             )
                              print(f"[!] SQL Injection (Boolean-based) found at {action}")
+                             vulnerable = True
+                             break
 
                 except Exception:
                     pass

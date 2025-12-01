@@ -3,6 +3,9 @@ target:
   timeout: 10
   threads: 5
 
+crawler:
+  depth: 2
+
 wordlists:
   subdomains: "wordlists/subdomains.txt"
   directories: "wordlists/directories.txt"

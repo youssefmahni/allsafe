@@ -21,3 +21,12 @@ class BaseScanner(ABC):
             "severity": severity,
             "url": url or self.target_url
         })
+
+    def log(self, message):
+        """Thread-safe logging"""
+        import threading
+        if not hasattr(BaseScanner, '_print_lock'):
+            BaseScanner._print_lock = threading.Lock()
+        
+        with BaseScanner._print_lock:
+            print(message)

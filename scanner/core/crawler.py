@@ -4,11 +4,12 @@ from urllib.parse import urljoin, urlparse
 from playwright.sync_api import sync_playwright
 
 class Crawler:
-    def __init__(self, target_url, session=None):
+    def __init__(self, target_url):
         self.target_url = target_url
-        self.session = session # Kept for compatibility but not used for navigation
+        self.target_domain = urlparse(target_url).netloc
         self.visited_urls = set()
         self.forms = []
+        self.form_signatures = set()
 
     def crawl(self, url=None, depth=2):
         if url is None:
@@ -48,12 +49,27 @@ class Crawler:
                 action = form.get('action')
                 if action:
                     full_action = urljoin(url, action)
-                    self.forms.append({
-                        'action': full_action,
-                        'method': form.get('method', 'get').lower(),
-                        'inputs': [{'name': i.get('name'), 'type': i.get('type', 'text')} 
-                                   for i in form.find_all('input')]
-                    })
+                    method = form.get('method', 'get').lower()
+                    
+                    inputs = []
+                    input_names = []
+                    for i in form.find_all('input'):
+                        name = i.get('name')
+                        inputs.append({'name': name, 'type': i.get('type', 'text')})
+                        if name:
+                            input_names.append(name)
+                    
+                    # Create a signature for deduplication
+                    # Signature: (action, method, sorted_input_names)
+                    form_sig = (full_action, method, tuple(sorted(input_names)))
+                    
+                    if form_sig not in self.form_signatures:
+                        self.form_signatures.add(form_sig)
+                        self.forms.append({
+                            'action': full_action,
+                            'method': method,
+                            'inputs': inputs
+                        })
 
             # Find links
             for link in soup.find_all('a'):
@@ -68,4 +84,4 @@ class Crawler:
             pass
 
     def _is_internal(self, url):
-        return urlparse(url).netloc == urlparse(self.target_url).netloc
+        return urlparse(url).netloc == self.target_domain

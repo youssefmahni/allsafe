@@ -2,18 +2,18 @@ from scanner.modules.base import BaseScanner
 
 class SessionScanner(BaseScanner):
     def scan(self, forms=None, urls=None):
-        print(f"[*] Starting Session Management Analysis on {self.target_url}")
+        self.log(f"[*] Starting Session Management Analysis on {self.target_url}")
         
         try:
             response = self.session.get(self.target_url)
             cookies = response.cookies
             
             if not cookies:
-                print("[*] No cookies set by the server.")
+                self.log("[*] No cookies set by the server.")
                 return
                 
             for cookie in cookies:
-                print(f" - Analyzing cookie: {cookie.name}")
+                self.log(f" - Analyzing cookie: {cookie.name}")
                 
                 if not cookie.secure:
                     self.add_vulnerability(
@@ -29,4 +29,4 @@ class SessionScanner(BaseScanner):
                      pass
 
         except Exception as e:
-            print(f"[!] Error analyzing sessions: {e}")
+            self.log(f"[!] Error analyzing sessions: {e}")

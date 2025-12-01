@@ -2,7 +2,7 @@ from scanner.modules.base import BaseScanner
 
 class AuthZScanner(BaseScanner):
     def scan(self, forms=None, urls=None):
-        print(f"[*] Starting Authorization Checks on {self.target_url}")
+        self.log(f"[*] Starting Authorization Checks on {self.target_url}")
         
         # IDOR Check (Heuristic)
         # Look for numeric IDs in URLs
