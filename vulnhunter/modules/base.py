@@ -1,0 +1,15 @@
+class BaseScanner:
+    def __init__(self, target_url, session):
+        self.target_url = target_url
+        self.session = session
+        self.vulnerabilities = []
+
+    def scan(self, forms=None, urls=None):
+        raise NotImplementedError("Subclasses must implement scan method")
+
+    def add_vulnerability(self, vuln_type, details, severity="Info"):
+        self.vulnerabilities.append({
+            "type": vuln_type,
+            "details": details,
+            "severity": severity
+        })

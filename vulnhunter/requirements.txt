@@ -1,0 +1,7 @@
+click
+requests
+beautifulsoup4
+colorama
+PyYAML
+dnspython
+cryptography

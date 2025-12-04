@@ -1,0 +1,16 @@
+target:
+  url: ""
+  timeout: 10
+  threads: 5
+
+wordlists:
+  subdomains: "wordlists/subdomains.txt"
+  directories: "wordlists/directories.txt"
+  users: "wordlists/users.txt"
+  passwords: "wordlists/passwords.txt"
+  sqli_payloads: "wordlists/sqli_payloads.txt"
+  xss_payloads: "wordlists/xss_payloads.txt"
+
+crawler:
+  depth: 2
+  max_urls: 100
