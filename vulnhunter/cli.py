@@ -14,6 +14,7 @@ from modules.recon.waf_detect import WAFDetectScanner
 from modules.recon.headers_check import HeadersCheckScanner
 from modules.recon.ssl_check import SSLCheckScanner
 from modules.recon.cors_check import CORSCheckScanner
+from modules.recon.whois_info import WhoisScanner
 
 # Vuln modules
 from modules.vuln.sqli import SQLIScanner
@@ -50,11 +51,13 @@ def main(target_url):
     # Recon phase
     print(f"{Fore.YELLOW}[*] Running Reconnaissance Phase...{Style.RESET_ALL}")
     recon_scanners = [
-        BasicInfoScanner(target_url, requester.session, config),
-        WAFDetectScanner(target_url, requester.session, config),
-        HeadersCheckScanner(target_url, requester.session, config),
-        SSLCheckScanner(target_url, requester.session, config),
-        CORSCheckScanner(target_url, requester.session, config)
+        #BasicInfoScanner(target_url, requester.session, config),
+        #WAFDetectScanner(target_url, requester.session, config),
+        #HeadersCheckScanner(target_url, requester.session, config),
+        #SSLCheckScanner(target_url, requester.session, config),
+        #CORSCheckScanner(target_url, requester.session, config)
+        WhoisScanner(target_url,requester.session,config),
+        
     ]
     
     max_threads = config.get('target.threads', 5)
