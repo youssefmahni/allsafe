@@ -2,7 +2,7 @@ from modules.base import BaseScanner
 
 class CORSCheckScanner(BaseScanner):
     def scan(self, forms=None, urls=None):
-        print(f"[*] Checking CORS configuration on {self.target_url}")
+        self.logger.info(f"Checking CORS configuration on {self.target_url}")
         
         try:
             response = self.session.get(self.target_url)
@@ -16,9 +16,9 @@ class CORSCheckScanner(BaseScanner):
                         "Medium"
                     )
                 else:
-                    print(f"[+] CORS Origin: {cors_header}")
+                    self.logger.success(f"CORS Origin: {cors_header}")
             else:
-                print("[+] No CORS header found")
+                self.logger.success("No CORS header found")
                 
             # Test with Origin header
             test_response = self.session.get(self.target_url, headers={'Origin': 'https://evil.com'})
@@ -31,4 +31,4 @@ class CORSCheckScanner(BaseScanner):
                 )
                 
         except Exception as e:
-            print(f"[!] Error checking CORS: {e}")
+            self.logger.error(f"Error checking CORS: {e}")

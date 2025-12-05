@@ -15,3 +15,8 @@ wordlists:
 crawler:
   depth: 2
   max_urls: 100
+
+dirb_scanner:
+  threads: 10
+  timeout: 5
+  max_depth: 5
