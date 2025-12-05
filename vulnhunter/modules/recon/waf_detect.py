@@ -2,7 +2,7 @@ from modules.base import BaseScanner
 
 class WAFDetectScanner(BaseScanner):
     def scan(self, forms=None, urls=None):
-        print(f"[*] Detecting WAF on {self.target_url}")
+        self.logger.info(f"Detecting WAF on {self.target_url}")
         
         payload = "<script>alert('WAF')</script>"
         waf_signatures = {
@@ -46,5 +46,5 @@ class WAFDetectScanner(BaseScanner):
             return False  # No WAF
             
         except Exception as e:
-            print(f"[!] Error detecting WAF: {e}")
+            self.logger.error(f"Error detecting WAF: {e}")
             return False
