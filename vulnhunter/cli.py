@@ -15,6 +15,9 @@ from modules.recon.headers_check import HeadersCheckScanner
 from modules.recon.ssl_check import SSLCheckScanner
 from modules.recon.cors_check import CORSCheckScanner
 from modules.recon.whois_info import WhoisScanner
+
+from modules.recon.dns_scanner import DNSScanner
+
 from modules.recon.dirb_scanner import DirbScanner
 from modules.recon.CloudStorage import CloudStorage
 
@@ -51,6 +54,7 @@ def main(target_url):
     # Recon phase
     logger.warning("Running Reconnaissance Phase...")
     recon_scanners = [
+
         BasicInfoScanner(target_url, requester.session, config),
         WAFDetectScanner(target_url, requester.session, config),
         HeadersCheckScanner(target_url, requester.session, config),
@@ -58,7 +62,9 @@ def main(target_url):
         CORSCheckScanner(target_url, requester.session, config),
         DirbScanner(target_url, requester.session, config),
         WhoisScanner(target_url,requester.session,config),
+        DNSScanner(target_url,requester.session,config),
         CloudStorage(target_url,requester.session,config)
+        
     ]
     
     max_threads = config.get('target.threads', 5)
@@ -100,8 +106,8 @@ def main(target_url):
     # Vuln phase
     logger.warning("Running Vulnerability Testing Phase...")
     vuln_scanners = [
-        SQLIScanner(target_url, requester.session, config),
-        BruteForceScanner(target_url, requester.session, config)
+      #  SQLIScanner(target_url, requester.session, config),
+       # BruteForceScanner(target_url, requester.session, config)
     ]
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:

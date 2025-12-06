@@ -3,3 +3,5 @@ __pycache__/
 venv/
 vulnhunter/reports
 .DS_Store
+env/
+vulnhunter/reports/*
