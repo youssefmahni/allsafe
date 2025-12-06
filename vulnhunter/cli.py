@@ -15,16 +15,18 @@ from modules.recon.headers_check import HeadersCheckScanner
 from modules.recon.ssl_check import SSLCheckScanner
 from modules.recon.cors_check import CORSCheckScanner
 from modules.recon.whois_info import WhoisScanner
-
 from modules.recon.dns_scanner import DNSScanner
-
 from modules.recon.dirb_scanner import DirbScanner
 from modules.recon.CloudStorage import CloudStorage
 from modules.recon.techstack import TechStackScanner
 
 # Vuln modules
 from modules.vuln.sqli import SQLIScanner
+from modules.vuln.nosqli import NoSQLIScanner
 from modules.vuln.brute_force import BruteForceScanner
+from modules.vuln.ssti import SSTIScanner
+from modules.vuln.lfi import LFIScanner
+from modules.vuln.rfi import RFIScanner
 
 @click.command()
 @click.argument('target_url', required=True)
@@ -67,6 +69,7 @@ def main(target_url):
         TechStackScanner(target_url,requester.session,config),
         #CloudStorage(target_url,requester.session,config)
         
+        
     ]
     
     max_threads = config.get('target.threads', 5)
@@ -108,8 +111,12 @@ def main(target_url):
     # Vuln phase
     logger.warning("Running Vulnerability Testing Phase...")
     vuln_scanners = [
-      #  SQLIScanner(target_url, requester.session, config),
-       # BruteForceScanner(target_url, requester.session, config)
+       #SQLIScanner(target_url, requester.session, config),
+        NoSQLIScanner(target_url, requester.session, config),
+       #BruteForceScanner(target_url, requester.session, config),
+        SSTIScanner(target_url, requester.session, config),
+        LFIScanner(target_url, requester.session, config),
+        RFIScanner(target_url, requester.session, config)
     ]
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
