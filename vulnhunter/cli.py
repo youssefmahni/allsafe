@@ -16,6 +16,7 @@ from modules.recon.ssl_check import SSLCheckScanner
 from modules.recon.cors_check import CORSCheckScanner
 from modules.recon.whois_info import WhoisScanner
 from modules.recon.dirb_scanner import DirbScanner
+from modules.recon.cloud_storage import CloudStorage
 
 # Vuln modules
 from modules.vuln.sqli import SQLIScanner
@@ -56,7 +57,8 @@ def main(target_url):
         SSLCheckScanner(target_url, requester.session, config),
         CORSCheckScanner(target_url, requester.session, config),
         DirbScanner(target_url, requester.session, config),
-        WhoisScanner(target_url,requester.session,config)
+        WhoisScanner(target_url,requester.session,config),
+        CloudStorage(target_url,requester.session,config)
     ]
     
     max_threads = config.get('target.threads', 5)
