@@ -1,4 +1,4 @@
-from vulnhunter.core.logger import logger
+from core.logger import logger
 
 def print_banner():
     banner = """
