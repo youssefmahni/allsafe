@@ -73,7 +73,7 @@ def main(target_url):
         # DirbScanner(target_url, requester.session, config),
         # WhoisScanner(target_url,requester.session,config),
         # DNSScanner(target_url,requester.session,config),
-        # CloudStorage(target_url,requester.session,config)
+        CloudStorage(target_url,requester.session,config)
         
         
     ]
@@ -117,10 +117,10 @@ def main(target_url):
     # Vuln phase
     logger.warning("Running Vulnerability Testing Phase...")
     vuln_scanners = [
-        SQLIScanner(target_url, requester.session, config),
-        XSSScanner(target_url, requester.session, config),
-        NoSQLIScanner(target_url, requester.session, config),
-        SSTIScanner(target_url, requester.session, config),
+        # SQLIScanner(target_url, requester.session, config),
+        # XSSScanner(target_url, requester.session, config),
+        # NoSQLIScanner(target_url, requester.session, config),
+        #SSTIScanner(target_url, requester.session, config),
         #LFIScanner(target_url, requester.session, config),
         #RFIScanner(target_url, requester.session, config)
     ]
