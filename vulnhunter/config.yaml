@@ -31,3 +31,7 @@ dirb_scanner:
 
 brute_force:
   concurrency: 100
+
+cookies:
+  name: ""
+  value: "" 

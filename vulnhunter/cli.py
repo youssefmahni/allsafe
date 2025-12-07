@@ -115,7 +115,7 @@ def main(target_url):
        OpenRedirectScanner(target_url, requester.session, config),
        XXEScanner(target_url, requester.session, config),
        SSRFScanner(target_url, requester.session, config),
-       CRLFScanner(target_url, requester.session, config)
+       CRLFScanner(target_url, requester.session, config),
        SQLIScanner(target_url, requester.session, config),
        NoSQLIScanner(target_url, requester.session, config),
        BruteForceScanner(target_url, requester.session, config),
