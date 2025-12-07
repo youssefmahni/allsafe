@@ -51,6 +51,14 @@ def main(target_url):
     
     requester = Requester()
     
+    # Load cookies from config
+    cookies = config.get('cookies', [])
+    if cookies:
+        for cookie in cookies:
+            if '=' in cookie:
+                key, value = cookie.split('=', 1)
+                requester.session.cookies.set(key, value)
+    
     # Verify connectivity
     response = requester.get(target_url)
     if not response:
@@ -62,9 +70,6 @@ def main(target_url):
     recon_scanners = [
         BasicInfoScanner(target_url, requester.session, config),
         WAFDetectScanner(target_url, requester.session, config),
-        HeadersCheckScanner(target_url, requester.session, config),
-        SSLCheckScanner(target_url, requester.session, config),
-        CORSCheckScanner(target_url, requester.session, config),
         DirbScanner(target_url, requester.session, config),
         WhoisScanner(target_url,requester.session,config),
         DNSScanner(target_url,requester.session,config),
@@ -110,18 +115,17 @@ def main(target_url):
     # Vuln phase
     logger.warning("Running Vulnerability Testing Phase...")
     vuln_scanners = [
-       SQLIScanner(target_url, requester.session, config),
-       BruteForceScanner(target_url, requester.session, config),
-       OpenRedirectScanner(target_url, requester.session, config),
-       XXEScanner(target_url, requester.session, config),
-       SSRFScanner(target_url, requester.session, config),
-       CRLFScanner(target_url, requester.session, config),
-       SQLIScanner(target_url, requester.session, config),
-       NoSQLIScanner(target_url, requester.session, config),
-       BruteForceScanner(target_url, requester.session, config),
-       SSTIScanner(target_url, requester.session, config),
-       LFIScanner(target_url, requester.session, config),
-       RFIScanner(target_url, requester.session, config)
+        HeadersCheckScanner(target_url, requester.session, config),
+        SSLCheckScanner(target_url, requester.session, config),
+        CORSCheckScanner(target_url, requester.session, config),
+        SQLIScanner(target_url, requester.session, config),
+        BruteForceScanner(target_url, requester.session, config),
+        OpenRedirectScanner(target_url, requester.session, config),
+        XXEScanner(target_url, requester.session, config),
+        SSRFScanner(target_url, requester.session, config),
+        CRLFScanner(target_url, requester.session, config),
+        NoSQLIScanner(target_url, requester.session, config),
+        SSTIScanner(target_url, requester.session, config)
     ]
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
