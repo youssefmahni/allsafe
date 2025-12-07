@@ -55,6 +55,16 @@ def main(target_url):
     
     requester = Requester()
     
+    # Inject cookies into session if present in config
+    cookies = config.get('cookies')
+    if cookies:
+        logger.info(f"Loading cookies from config: {cookies}")
+        for cookie in cookies:
+            if '=' in cookie:
+                key, value = cookie.split('=', 1)
+                requester.session.cookies.set(key, value)
+        logger.info(f"Session cookies: {requester.session.cookies.get_dict()}")
+    
     # Verify connectivity
     response = requester.get(target_url)
     if not response:
@@ -64,6 +74,7 @@ def main(target_url):
     # Recon phase
     logger.warning("Running Reconnaissance Phase...")
     recon_scanners = [
+<<<<<<< HEAD
 
         # BasicInfoScanner(target_url, requester.session, config),
         # WAFDetectScanner(target_url, requester.session, config),
@@ -76,6 +87,14 @@ def main(target_url):
         CloudStorage(target_url,requester.session,config)
         
         
+=======
+        # BasicInfoScanner(target_url, requester.session, config),
+        # WAFDetectScanner(target_url, requester.session, config),
+        # DirbScanner(target_url, requester.session, config),
+        # WhoisScanner(target_url,requester.session,config),
+        # DNSScanner(target_url,requester.session,config),
+        # CloudStorage(target_url,requester.session,config) 
+>>>>>>> 1272b2b390fa252400563999f7b7909fa08dbd32
     ]
     
     max_threads = config.get('target.threads', 5)
@@ -107,7 +126,7 @@ def main(target_url):
             return
     
     # Crawl for vuln testing
-    logger.info("Crawling for forms and URLs...")
+    logger.warning("Crawling for forms and URLs...")
     crawler = Crawler(target_url, requester)
     crawler.crawl()
     forms = crawler.forms
@@ -117,12 +136,26 @@ def main(target_url):
     # Vuln phase
     logger.warning("Running Vulnerability Testing Phase...")
     vuln_scanners = [
+<<<<<<< HEAD
         # SQLIScanner(target_url, requester.session, config),
         # XSSScanner(target_url, requester.session, config),
         # NoSQLIScanner(target_url, requester.session, config),
         #SSTIScanner(target_url, requester.session, config),
         #LFIScanner(target_url, requester.session, config),
         #RFIScanner(target_url, requester.session, config)
+=======
+        # HeadersCheckScanner(target_url, requester.session, config),
+        # SSLCheckScanner(target_url, requester.session, config),
+        # CORSCheckScanner(target_url, requester.session, config),
+        # SQLIScanner(target_url, requester.session, config),
+        BruteForceScanner(target_url, requester.session, config),
+        # OpenRedirectScanner(target_url, requester.session, config),
+        # XXEScanner(target_url, requester.session, config),
+        # SSRFScanner(target_url, requester.session, config),
+        # CRLFScanner(target_url, requester.session, config),
+        # NoSQLIScanner(target_url, requester.session, config),
+        # SSTIScanner(target_url, requester.session, config)
+>>>>>>> 1272b2b390fa252400563999f7b7909fa08dbd32
     ]
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:

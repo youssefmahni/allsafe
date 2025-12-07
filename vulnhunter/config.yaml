@@ -1,7 +1,7 @@
 target:
   url: ""
   timeout: 10
-  threads: 5
+  threads: 50
 
 wordlists:
   subdomains: "wordlists/subdomains.txt"
@@ -17,7 +17,7 @@ wordlists:
   crlf_payloads: "wordlists/crlf_payloads.txt"
 
 crawler:
-  depth: 2
+  depth: 10
   max_urls: 100
 
 
@@ -25,13 +25,13 @@ env:
   apiKey : "hoUJi9OEbO8kVm9FyRT7SQ==AYrzU1F6tPcUwMdS"
 
 dirb_scanner:
-  threads: 10
+  threads: 50
   timeout: 5
-  max_depth: 5
+  max_depth: 10
 
 brute_force:
-  concurrency: 100
+  concurrency: 10
 
 cookies:
-  name: ""
-  value: "" 
+  - "PHPSESSID=rlf0hcm35mm0k12i8of6m20nmi"
+  - "security=low"

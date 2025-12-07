@@ -40,6 +40,10 @@ class Reporter:
         
         # Sort vulnerabilities by severity
         vuln_items.sort(key=lambda x: severity_order.get(x['severity'], 5))
+
+        # Separate Discovered Paths from other Info
+        discovered_items = [v for v in info_items if v['type'] in ['File Found', 'Directory Found']]
+        general_info_items = [v for v in info_items if v['type'] not in ['File Found', 'Directory Found']]
         
         html = f"""
         <html>
@@ -71,7 +75,13 @@ class Reporter:
                 <h2>Reconnaissance & Information</h2>
                 <table>
                 <tr><th>Type</th><th>Details</th></tr>
-                {"".join(f"<tr><td>{v['type']}</td><td>{v['details']}</td></tr>" for v in info_items) if info_items else "<tr><td colspan='2'>No information items found.</td></tr>"}
+                {"".join(f"<tr><td>{v['type']}</td><td>{v['details']}</td></tr>" for v in general_info_items) if general_info_items else "<tr><td colspan='2'>No general information items found.</td></tr>"}
+                </table>
+
+                <h3>Discovered Paths</h3>
+                <table>
+                <tr><th>Type</th><th>Details</th></tr>
+                {"".join(f"<tr><td>{v['type']}</td><td>{v['details']}</td></tr>" for v in discovered_items) if discovered_items else "<tr><td colspan='2'>No files or directories found.</td></tr>"}
                 </table>
             </div>
             
