@@ -1,55 +1,63 @@
 from modules.base import BaseScanner
 import os
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+import html
 
-class SQLIScanner(BaseScanner):
+class XSSScanner(BaseScanner):
 
     def __init__(self, target_url, session, config):
         super().__init__(target_url, session, config)
 
-        # Track duplicates
+        # Prevent duplicates
         self.seen_form_vulns = set()
         self.seen_url_vulns = set()
 
+    # ============================
+    # MAIN SCAN LOGIC
+    # ============================
     def scan(self, forms=None, urls=None):
-        self.logger.info(f"Scanning SQL Injection on {self.target_url}")
+        self.logger.info(f"Scanning for XSS on {self.target_url}")
 
-        payloads = self.load_payloads("wordlists/sqli_payloads.txt")
+        payloads = self.load_payloads("wordlists/xss_payloads.txt")
 
         # -------------------------
-        # 1. FORM SQLi TESTING
+        # 1. FORM XSS TESTING
         # -------------------------
         if forms:
             for form in forms:
-                result = self.scan_form_for_sqli(form, payloads)
+                result = self.scan_form_for_xss(form, payloads)
+
                 if result:
                     field, payload, action = result
                     vuln_id = f"{action}|{field}"
 
-                    # Avoid duplicate form inputs
+                    # skip duplicates
                     if vuln_id in self.seen_form_vulns:
                         continue
 
                     self.seen_form_vulns.add(vuln_id)
 
-                    desc = (
-                        f"Form SQLi found! Field: {field} | Payload: {payload} | Action: {action}"
-                    )
-                    self.add_vulnerability("SQL Injection", desc, "High")
+                    # RAW text (stored safely)
+                    raw_desc = f"XSS found in form! Field: {field} | Payload: {payload} | Action: {action}"
+
+                    # SAFE text (escaped to prevent execution in HTML)
+                    safe_desc = html.escape(raw_desc)
+
+                    self.add_vulnerability("Cross-Site Scripting (XSS)", safe_desc, "Medium")
 
         # -------------------------
-        # 2. URL SQLi TESTING
+        # 2. URL XSS TESTING
         # -------------------------
         if urls:
             for url in urls:
-                result = self.scan_url_for_sqli(url, payloads)
+                result = self.scan_url_for_xss(url, payloads)
 
                 if result:
                     param, payload, test_url = result
 
-                    # Unique ID = base URL + param
                     parsed = urlparse(url)
                     base_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
                     vuln_id = f"{base_url}|{param}"
 
                     if vuln_id in self.seen_url_vulns:
@@ -57,41 +65,59 @@ class SQLIScanner(BaseScanner):
 
                     self.seen_url_vulns.add(vuln_id)
 
-                    desc = (
-                        f"URL SQLi found! Param: {param} | Payload: {payload} | URL: {test_url}"
-                    )
-                    self.add_vulnerability("SQL Injection", desc, "High")
+                    # RAW text (complete full URL preserved)
+                    raw_desc = f"XSS found in URL! Param: {param} | Payload: {payload} | URL: {test_url}"
 
-    # ---------------------------------------------------------
+                    # SAFE text (no XSS execution)
+                    safe_desc = html.escape(raw_desc)
+
+                    self.add_vulnerability("Cross-Site Scripting (XSS)", safe_desc, "Medium")
+
+    # ============================
     # LOAD PAYLOADS
-    # ---------------------------------------------------------
+    # ============================
     def load_payloads(self, path):
         if os.path.exists(path):
             with open(path, "r") as f:
-                return [line.strip() for line in f if line.strip()]
-        return ["' OR '1'='1", "1' OR 1=1 --"]
-
-    # ---------------------------------------------------------
-    # SQL ERROR DETECTION
-    # ---------------------------------------------------------
-    def detect_sqli(self, response):
-        errors = [
-            "sql syntax", "mysql_fetch", "mysql_num",
-            "odbc", "ora-", "syntax error",
-            "unclosed quotation mark", "sqlite"
+                return [p.strip() for p in f if p.strip()]
+        return [
+            "<script>alert(1)</script>",
+            "\"><script>alert(1)</script>",
+            "'><img src=x onerror=alert(1)>"
         ]
-        body = response.text.lower()
-        return any(err in body for err in errors)
 
-    # ---------------------------------------------------------
-    # FORM SQLi TESTING
-    # ---------------------------------------------------------
-    def scan_form_for_sqli(self, form, payloads):
+    # ============================
+    # REFLECTION DETECTION
+    # ============================
+    def detect_xss(self, response, payload):
+        body = response.text.lower()
+
+        clean_payload = payload.lower()
+
+        # literal reflection
+        if clean_payload in body:
+            return True
+
+        # HTML-escaped reflection
+        if html.escape(payload).lower() in body:
+            return True
+
+        # URL-encoded reflection
+        encoded = urlencode({"x": payload})[2:].lower()
+        if encoded in body:
+            return True
+
+        return False
+
+    # ============================
+    # FORM SCANNER
+    # ============================
+    def scan_form_for_xss(self, form, payloads):
 
         action = form.get("action")
         inputs = form.get("inputs", [])
 
-        base_data = {inp["name"]: "test" for inp in inputs if inp.get("name")}
+        base_data = {i["name"]: "test" for i in inputs if i.get("name")}
 
         for inp in inputs:
             field = inp.get("name")
@@ -105,15 +131,15 @@ class SQLIScanner(BaseScanner):
 
                 response = self.session.post(action, data=test_data)
 
-                if self.detect_sqli(response):
+                if self.detect_xss(response, payload):
                     return (field, payload, action)
 
         return None
 
-    # ---------------------------------------------------------
-    # URL SQLi TESTING
-    # ---------------------------------------------------------
-    def scan_url_for_sqli(self, url, payloads):
+    # ============================
+    # URL SCANNER
+    # ============================
+    def scan_url_for_xss(self, url, payloads):
 
         parsed = urlparse(url)
         params = parse_qs(parsed.query)
@@ -137,7 +163,7 @@ class SQLIScanner(BaseScanner):
 
                 response = self.session.get(test_url)
 
-                if self.detect_sqli(response):
+                if self.detect_xss(response, payload):
                     return (param, payload, test_url)
 
         return None

@@ -22,6 +22,9 @@ from modules.recon.techstack import TechStackScanner
 
 # Vuln modules
 from modules.vuln.sqli import SQLIScanner
+from modules.vuln.xss import XSSScanner
+from modules.vuln.cmdi import CMDiScanner
+
 from modules.vuln.nosqli import NoSQLIScanner
 from modules.vuln.brute_force import BruteForceScanner
 from modules.vuln.ssti import SSTIScanner
@@ -58,16 +61,16 @@ def main(target_url):
     logger.warning("Running Reconnaissance Phase...")
     recon_scanners = [
 
-        BasicInfoScanner(target_url, requester.session, config),
-        WAFDetectScanner(target_url, requester.session, config),
-        HeadersCheckScanner(target_url, requester.session, config),
-        SSLCheckScanner(target_url, requester.session, config),
-        CORSCheckScanner(target_url, requester.session, config),
-        DirbScanner(target_url, requester.session, config),
-        WhoisScanner(target_url,requester.session,config),
-        DNSScanner(target_url,requester.session,config),
-        TechStackScanner(target_url,requester.session,config),
-        CloudStorage(target_url,requester.session,config)
+        # BasicInfoScanner(target_url, requester.session, config),
+        # WAFDetectScanner(target_url, requester.session, config),
+        # HeadersCheckScanner(target_url, requester.session, config),
+        # SSLCheckScanner(target_url, requester.session, config),
+        # CORSCheckScanner(target_url, requester.session, config),
+        # DirbScanner(target_url, requester.session, config),
+        # WhoisScanner(target_url,requester.session,config),
+        # DNSScanner(target_url,requester.session,config),
+        # TechStackScanner(target_url,requester.session,config),
+        # CloudStorage(target_url,requester.session,config)
         
         
     ]
@@ -102,21 +105,24 @@ def main(target_url):
     
     # Crawl for vuln testing
     logger.info("Crawling for forms and URLs...")
-    #crawler = Crawler(target_url, requester)
-    #crawler.crawl()
-    #forms = crawler.forms
-    #urls = list(crawler.urls)
-    #logger.info(f"Found {len(urls)} URLs and {len(forms)} forms.")
+    crawler = Crawler(target_url, requester)
+    crawler.crawl()
+    forms = crawler.forms
+    urls = list(crawler.urls)
+    logger.info(f"Found {len(urls)} URLs and {len(forms)} forms.")
     
     # Vuln phase
     logger.warning("Running Vulnerability Testing Phase...")
     vuln_scanners = [
-       #SQLIScanner(target_url, requester.session, config),
-        NoSQLIScanner(target_url, requester.session, config),
+        #SQLIScanner(target_url, requester.session, config),
+        # XSSScanner(target_url,requester.session,config)
+
+        CMDiScanner(target_url,requester.session,config)
+        #NoSQLIScanner(target_url, requester.session, config),
        #BruteForceScanner(target_url, requester.session, config),
-        SSTIScanner(target_url, requester.session, config),
-        LFIScanner(target_url, requester.session, config),
-        RFIScanner(target_url, requester.session, config)
+        #SSTIScanner(target_url, requester.session, config),
+        #LFIScanner(target_url, requester.session, config),
+        #RFIScanner(target_url, requester.session, config)
     ]
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
