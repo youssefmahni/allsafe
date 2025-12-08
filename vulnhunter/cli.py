@@ -28,9 +28,7 @@ from modules.vuln.xxe import XXEScanner
 from modules.vuln.ssrf import SSRFScanner
 from modules.vuln.crlf import CRLFScanner
 from modules.vuln.ssti import SSTIScanner
-from modules.vuln.lfi import LFIScanner
 from modules.vuln.csrf import CSRFScanner
-
 
 @click.command()
 @click.argument('target_url', required=True)
